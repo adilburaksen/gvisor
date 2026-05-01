@@ -118,6 +118,9 @@ type TaskConfig struct {
 	// It may be nil.
 	SessionKeyring *auth.Key
 
+	// Personality is the personality of the parent task.
+	Personality uint32
+
 	// Origin indicates the origins of the new task.
 	Origin TaskOrigin
 
@@ -199,6 +202,7 @@ func (ts *TaskSet) newTask(ctx context.Context, cfg *TaskConfig) (*Task, int32, 
 		cgroups:         make(map[Cgroup]struct{}),
 		userCounters:    cfg.UserCounters,
 		sessionKeyring:  cfg.SessionKeyring,
+		personality:     atomicbitops.FromUint32(cfg.Personality),
 		Origin:          cfg.Origin,
 		onDestroyAction: make(map[TaskDestroyAction]struct{}),
 		noNewPrivs:      cfg.NoNewPrivs,
