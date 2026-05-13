@@ -20,6 +20,7 @@ import (
 	"io"
 	"os"
 	"strconv"
+	"strings"
 	time2 "time"
 
 	specs "github.com/opencontainers/runtime-spec/specs-go"
@@ -523,4 +524,16 @@ func (l *Loader) saveWithOpts(saveOpts *state.SaveOpts, execOpts *control.SaveRe
 		Watchdog: l.watchdog,
 	}
 	return state.SaveWithOpts(saveOpts, execOpts)
+}
+
+func procFiles(conf *config.Config) []string {
+	var files []string
+
+	if conf.OverrideProcs != "" {
+		for _, val := range strings.Split(conf.OverrideProcs, ",") {
+			files = append(files, strings.TrimPrefix(val, "/proc/"))
+		}
+	}
+
+	return files
 }
