@@ -62,7 +62,7 @@ TEST(ExitTest, CloseFds) {
 
   pid_t pid = fork();
   if (pid == 0) {
-    read_fd.reset();
+    close(read_fd.release());
 
     SleepSafe(absl::Seconds(10));
 
@@ -109,7 +109,7 @@ TEST(ExitTest, SigkillZombieGroup) {
 
   pid_t pid = fork();
   if (pid == 0) {
-    read_fd.reset();
+    close(read_fd.release());
 
     _exit(0);
   }
@@ -140,7 +140,7 @@ TEST(ExitTest, SigkillZombieThread) {
 
   pid_t pid = fork();
   if (pid == 0) {
-    read_fd.reset();
+    close(read_fd.release());
 
     syscall(SYS_exit, 0);
   }

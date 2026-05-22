@@ -253,7 +253,13 @@ func (t *Task) Clone(args *linux.CloneArgs) (ThreadID, *SyscallControl, error) {
 		if args.Flags&linux.CLONE_SIGHAND == 0 {
 			sh = sh.Fork()
 		}
-		tg = t.k.NewThreadGroup(pidns, sh, linux.Signal(args.ExitSignal), tg.limits.GetCopy())
+		termSig := linux.Signal(args.ExitSignal)
+		if args.Flags&linux.CLONE_PARENT != 0 {
+			t.tg.pidns.owner.mu.RLock()
+			termSig = t.tg.terminationSignal
+			t.tg.pidns.owner.mu.RUnlock()
+		}
+		tg = t.k.NewThreadGroup(pidns, sh, termSig, tg.limits.GetCopy())
 		tg.oomScoreAdj = atomicbitops.FromInt32(t.tg.oomScoreAdj.Load())
 		rseqAddr = t.rseqAddr
 		rseqSignature = t.rseqSignature
@@ -286,7 +292,7 @@ func (t *Task) Clone(args *linux.CloneArgs) (ThreadID, *SyscallControl, error) {
 		SessionKeyring:   sessionKeyring,
 		Origin:           t.Origin,
 	}
-	if args.Flags&linux.CLONE_THREAD == 0 {
+	if args.Flags&(linux.CLONE_THREAD|linux.CLONE_PARENT) == 0 {
 		cfg.Parent = t
 	} else {
 		cfg.InheritParent = t
